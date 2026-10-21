@@ -1,12 +1,10 @@
 import { DatabaseSync } from "node:sqlite";
-import { randomUUID } from "node:crypto";
-import {
-  fingerprint,
-  Problem,
-  type Intake,
-  type Payload,
-  type Status,
-} from "./contract.js";
+import { randomUUID, createHash } from "node:crypto";
+import { Problem, type Intake, type Payload, type Status } from "./contract.js";
+
+function fingerprint(request: Payload) {
+  return createHash("sha256").update(JSON.stringify(request)).digest("hex");
+}
 
 export type Entry = Payload & {
   id: string;

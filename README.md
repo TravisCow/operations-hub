@@ -4,6 +4,18 @@ An original portfolio prototype for a fictional maintenance business: deliver a 
 
 Built with TypeScript, React, Node.js, and SQLite. No employer code, internal materials, client data, or third-party platform integration is included. This is a self-initiated demonstration; no customer outcomes or time savings are claimed.
 
+## Try the public sandbox
+
+**[Open Operations Hub](https://operations-hub-demo-six.vercel.app/)**
+
+Explore sample intake, assignment, closure, repeat delivery, and simulated failure/retry. Each tab has its own fictional sample data, retained on refresh and resettable with **Reset demo**. Browser storage must be available. No submitted details are sent to a backend.
+
+This public version simulates the workflow in the browser. It does **not** run the authenticated webhook or persistent database. The real Node/SQLite implementation is included in this repository and verified by the integration tests below; run it locally to exercise that path.
+
+![Public interactive sandbox](docs/images/public-sandbox.png)
+
+## Persistent local prototype
+
 ![Desktop request queue and workflow](docs/images/desktop.png)
 
 [Mobile layout](docs/images/mobile.png) · [Failure and retry state](docs/images/failure.png) · [Verification record](docs/VERIFICATION.md)
@@ -93,6 +105,21 @@ React sample form → local server-side adapter → authenticated HTTP webhook
 SQLite enforces a unique event ID. A BEGIN IMMEDIATE transaction checks the prior fingerprint and commits the request and its first activity entry together. If either insert fails, neither is kept. Separate database connections therefore cannot each accept the same event. WAL mode and a bounded busy timeout support these small concurrent writes.
 
 The frontend is a lightweight React application bundled with esbuild. The Node HTTP server serves its assets and API on one origin. A small dependency surface keeps the core workflow inspectable. The database and any runtime configuration are ignored by Git.
+
+### Public hosting
+
+`npm run build:sandbox` produces **dist/sandbox**, containing only HTML, CSS, and the browser bundle. Vercel serves that directory using vercel.json. Public API and webhook routes return 404. A Content Security Policy sets connect-src to none so the page cannot submit data to an endpoint. Sample edits live in sessionStorage, separate from the local SQLite file.
+
+The sandbox reuses the input contract. Its storage and workflow simulation have separate tests for isolation, reload persistence, repeats, conflicts, closure, reset, storage failure, and retry. There is no service credential or database in the public build. Automated Git deployments are not connected to the selected Vercel account; the verified version was deployed using the Vercel CLI.
+
+To preview the public build locally:
+
+```sh
+npm run build:sandbox
+node scripts/preview-sandbox.mjs
+```
+
+Open http://localhost:5101/. This is a static preview with the same network policy as the hosted sandbox.
 
 ## Verification
 

@@ -2,6 +2,15 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { Entry, Activity } from "../src/store.js";
 import type { Intake, Status } from "../src/contract.js";
+import { Sandbox } from "./sandbox.js";
+
+declare const __PUBLIC_SANDBOX__: boolean;
+const sandboxMode =
+  typeof __PUBLIC_SANDBOX__ !== "undefined" && __PUBLIC_SANDBOX__;
+let sandbox: Sandbox | undefined;
+function getSandbox() {
+  return (sandbox ||= new Sandbox(window.sessionStorage));
+}
 
 const labels: Record<Status, string> = {
   new: "New",
@@ -11,6 +20,18 @@ const labels: Record<Status, string> = {
 };
 type Failure = { message: string; correlationId?: string };
 async function api(path: string, options: RequestInit = {}) {
+  if (sandboxMode) {
+    try {
+      return await getSandbox().call(path, options);
+    } catch (error) {
+      throw {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unable to update sample data.",
+      };
+    }
+  }
   const response = await fetch(path, {
     ...options,
     headers: { "Content-Type": "application/json", ...options.headers },
@@ -126,6 +147,44 @@ function App() {
       setBusy(false);
     }
   }
+  function resetDemo() {
+    try {
+      getSandbox().reset();
+      setSelected("");
+      setDetail(null);
+      setLastDelivery(null);
+      setDeliveryResult(null);
+      setError(null);
+      setSearch("");
+      setFilter("all");
+      setShowForm(false);
+      setRefresh((v) => v + 1);
+    } catch {
+      setError({
+        message:
+          "Your browser could not reset sample storage. Try opening the demo in a new tab.",
+      });
+    }
+  }
+  function previewRetry() {
+    try {
+      const input: Intake = {
+        eventId: crypto.randomUUID(),
+        request: {
+          title: "Inspect the loading-bay door",
+          description:
+            "Fictional request to inspect and adjust the door latch.",
+          requester: "Demo location D",
+          priority: "normal",
+          dueDate: new Date().toISOString().slice(0, 10),
+        },
+      };
+      getSandbox().failNextDelivery();
+      void deliver(input);
+    } catch {
+      setError({ message: "Sample storage is unavailable in this tab." });
+    }
+  }
   const visible = requests.filter(
     (r) =>
       (filter === "all" || r.status === filter) &&
@@ -158,11 +217,14 @@ function App() {
           <span>◫</span> Request queue <b>{requests.length}</b>
         </div>
         <div className="rail-note">
-          <span className="dot" /> Local prototype
+          <span className="dot" />{" "}
+          {sandboxMode ? "Interactive sandbox" : "Local prototype"}
           <p>
             Fictional maintenance requests.
             <br />
-            Your work is saved on this computer.
+            {sandboxMode
+              ? "Sample edits stay in this tab."
+              : "Your work is saved on this computer."}
           </p>
         </div>
       </aside>
@@ -186,6 +248,32 @@ function App() {
             {showForm ? "Close sample form" : "+ New sample request"}
           </button>
         </header>
+        {sandboxMode && (
+          <section className="sandbox-banner" aria-label="About this demo">
+            <div>
+              <strong>Explore the workflow.</strong>
+              <p>
+                This is a browser simulation with fictional data. Changes stay
+                in this tab; no requests are sent to the backend.
+              </p>
+              <a
+                href="https://github.com/TravisCow/operations-hub#architecture-and-decisions"
+                target="_blank"
+                rel="noreferrer"
+              >
+                View the real webhook and persistence implementation ↗
+              </a>
+            </div>
+            <div className="sandbox-actions">
+              <button onClick={previewRetry} disabled={busy}>
+                Try a failed delivery
+              </button>
+              <button onClick={resetDemo} disabled={busy}>
+                Reset demo
+              </button>
+            </div>
+          </section>
+        )}
         <section className="metrics" aria-label="Request summary">
           <div>
             <span>Active requests</span>
@@ -236,7 +324,9 @@ function App() {
               <strong>
                 {deliveryResult.duplicate
                   ? "Delivery recognized."
-                  : "Request received."}
+                  : sandboxMode
+                    ? "Sample request received."
+                    : "Request received."}
               </strong>{" "}
               {deliveryResult.duplicate
                 ? "The existing request is unchanged. No duplicate was created."
@@ -265,8 +355,9 @@ function App() {
               <div className="eyebrow">SAMPLE REQUEST FORM</div>
               <h2>Bring a request into the queue.</h2>
               <p>
-                This fictional form delivers to the Hub through its server-side
-                integration. Use sample details only.
+                {sandboxMode
+                  ? "This form simulates a delivery in your browser. Use fictional details only."
+                  : "This fictional form delivers to the Hub through its server-side integration. Use sample details only."}
               </p>
             </div>
             <form onSubmit={submit}>
@@ -517,7 +608,9 @@ function App() {
                     <p>Event: {detail.entry.eventId}</p>
                     <p>Reference: {detail.entry.correlationId}</p>
                     <p>
-                      Saved once. Repeat deliveries return this same request.
+                      {sandboxMode
+                        ? "Simulated delivery. Repeat deliveries return this same sample request."
+                        : "Saved once. Repeat deliveries return this same request."}
                     </p>
                   </details>
                 </section>
@@ -526,7 +619,10 @@ function App() {
           </aside>
         </section>
         <footer>
-          Operations Hub · Original portfolio prototype{" "}
+          Operations Hub ·{" "}
+          {sandboxMode
+            ? "Interactive portfolio sandbox"
+            : "Original portfolio prototype"}{" "}
           <span>Fictional data. No real service requests are sent.</span>
         </footer>
       </main>

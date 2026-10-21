@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc && node scripts/build.mjs",
     "start": "node dist/src/main.js",
-    "test": "tsc && node --test dist/test/*.test.js"
+    "test": "tsc && node --test dist/test/*.test.js",
+    "build:sandbox": "tsc && node scripts/build.mjs --sandbox"
   },
   "dependencies": {
     "react": "^19.3.1",
