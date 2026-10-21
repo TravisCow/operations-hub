@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 export type Status = "new" | "assigned" | "in_progress" | "closed";
 export type Payload = {
   title: string;
@@ -47,7 +45,10 @@ export function validate(value: unknown): Intake {
     )
   )
     throw new Problem(422, "Unknown request field.");
-  if (typeof req.priority !== "string" || !["normal", "urgent"].includes(req.priority))
+  if (
+    typeof req.priority !== "string" ||
+    !["normal", "urgent"].includes(req.priority)
+  )
     throw new Problem(422, "Choose normal or urgent priority.");
   const dueDate = field(req.dueDate, "Due date", 10);
   if (
@@ -66,7 +67,4 @@ export function validate(value: unknown): Intake {
       dueDate,
     },
   };
-}
-export function fingerprint(request: Payload) {
-  return createHash("sha256").update(JSON.stringify(request)).digest("hex");
 }

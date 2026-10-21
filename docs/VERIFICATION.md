@@ -2,6 +2,20 @@
 
 October 21, 2026. Local prototype on Windows, Node.js 22.14.0, npm 10.9.2.
 
+## Public sandbox verification
+
+Live at https://operations-hub-demo-six.vercel.app/. The public artifact contains a browser simulation, not the operator API or SQLite database.
+
+- All 18 tests pass: the original 12 HTTP/database checks plus 6 sandbox behavior checks.
+- Both the local-backend and public-sandbox builds pass.
+- Public HTML returns HTTP 200 without sign-in. /api/requests and /webhooks/requests return 404.
+- The deployed Content Security Policy sets connect-src to none.
+- Live browser walkthrough: create sample → repeat delivery without duplication → assign → in progress → close and become read-only.
+- A second independently opened tab started with only its 3 seed requests while the first retained its extra request. Refresh retained first-tab data; Reset demo restored its seeds.
+- Live simulated failure and retry created one sample request. Resending it still left one copy.
+- Desktop (1366px) and mobile (390px) checks showed no horizontal page overflow.
+- Public desktop screenshot: images/public-sandbox.png. The interface and README explicitly distinguish this simulation from the real persistent integration.
+
 ## Automated checks
 
 - Clean installation from package-lock.json with lifecycle scripts disabled: passed.

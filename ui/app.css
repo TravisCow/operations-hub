@@ -708,3 +708,45 @@ footer {
     font-size: 33px;
   }
 }
+
+.sandbox-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  background: #e9eee3;
+  border: 1px solid #cdd7c5;
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 25px;
+  font-size: 12px;
+}
+.sandbox-banner p {
+  margin: 6px 0;
+  color: #596953;
+  max-width: 620px;
+}
+.sandbox-banner a {
+  color: #3a624b;
+  font-size: 11px;
+}
+.sandbox-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.sandbox-actions button {
+  font-size: 11px;
+}
+@media (max-width: 1100px) {
+  .sandbox-banner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+@media (max-width: 760px) {
+  .sandbox-actions {
+    flex-wrap: wrap;
+  }
+}
